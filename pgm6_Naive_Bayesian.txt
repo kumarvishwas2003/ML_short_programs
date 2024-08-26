@@ -1,0 +1,88 @@
+#shortest version
+import csv
+import random
+import math
+
+def load_csv(filename):
+    with open(filename, "r") as file:
+        dataset = [list(map(float, row)) for row in csv.reader(file)]
+    return dataset
+
+def split_dataset(dataset, ratio):
+    random.shuffle(dataset)
+    split_point = int(len(dataset) * ratio)
+    return dataset[:split_point], dataset[split_point:]
+
+def separate_by_class(dataset):
+    separated = {}
+    for row in dataset:
+        label = row[-1]
+        if label not in separated:
+            separated[label] = []
+        separated[label].append(row)
+    return separated
+
+def summarize(dataset):
+    summaries = []
+    for attribute in zip(*dataset):
+        mean_val = sum(attribute) / len(attribute)
+        stdev_val = math.sqrt(sum((x - mean_val) ** 2 for x in attribute) / (len(attribute) - 1))
+        summaries.append((mean_val, stdev_val))
+    return summaries[:-1]
+
+def summarize_by_class(dataset):
+    separated = separate_by_class(dataset)
+    summaries = {}
+    for class_value, instances in separated.items():
+        summaries[class_value] = summarize(instances)
+    return summaries
+
+def calculate_probability(x, mean, stdev):
+    exponent = math.exp(-((x - mean) ** 2) / (2 * stdev ** 2))
+    return (1 / (math.sqrt(2 * math.pi) * stdev)) * exponent
+
+def calculate_class_probabilities(summaries, input_vector):
+    probabilities = {}
+    for class_value, class_summaries in summaries.items():
+        probabilities[class_value] = 1
+        for i, (mean, stdev) in enumerate(class_summaries):
+            probabilities[class_value] *= calculate_probability(input_vector[i], mean, stdev)
+    return probabilities
+
+def predict(summaries, input_vector):
+    probabilities = calculate_class_probabilities(summaries, input_vector)
+    return max(probabilities, key=probabilities.get)
+
+def get_predictions(summaries, test_set):
+    return [predict(summaries, row) for row in test_set]
+
+def get_accuracy(test_set, predictions):
+    correct = sum(row[-1] == pred for row, pred in zip(test_set, predictions))
+    return (correct / len(test_set)) * 100
+
+def main():
+    filename = 'P5_naivedata.csv'
+    split_ratio = 0.67
+    dataset = load_csv(filename)
+    
+    print('Pima Indian Diabetes Dataset loaded...')
+    print(f'Total instances available: {len(dataset)}')
+    print(f'Total attributes present: {len(dataset[0]) - 1}')
+    print("First Five instances of dataset:")
+    for i in range(5):
+        print(f'{i + 1}: {dataset[i]}')
+
+    training_set, test_set = split_dataset(dataset, split_ratio)
+    print('\nDataset is split into training and testing set.')
+    print(f'Training examples = {len(training_set)} \nTesting examples = {len(test_set)}')
+
+    # Prepare model
+    summaries = summarize_by_class(training_set)
+    
+    # Test model
+    predictions = get_predictions(summaries, test_set)
+    accuracy = get_accuracy(test_set, predictions)
+    print(f'Accuracy of the classifier is: {accuracy:.2f}%')
+
+if __name__ == "__main__":
+    main()

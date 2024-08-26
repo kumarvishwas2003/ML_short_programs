@@ -1,0 +1,41 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn import metrics
+
+# Load the dataset
+msg = pd.read_csv('P6_naivetext1.csv', names=['message', 'label'])
+
+# Map labels to numeric values
+msg['labelnum'] = msg.label.map({'pos': 1, 'neg': 0})
+
+# Drop rows with missing values
+msg.dropna(subset=['labelnum'], inplace=True)
+
+# Separate features and labels
+X = msg.message
+Y = msg.labelnum
+
+# Split the dataset into train and test data
+xtrain, xtest, ytrain, ytest = train_test_split(X, Y)
+
+# Feature extraction using CountVectorizer
+count_vect = CountVectorizer()
+xtrain_dtm = count_vect.fit_transform(xtrain)
+xtest_dtm = count_vect.transform(xtest)
+
+# Train Naive Bayes classifier
+clf = MultinomialNB().fit(xtrain_dtm, ytrain)
+predicted = clf.predict(xtest_dtm)
+
+# Print classification results
+for doc, p in zip(xtest, predicted):
+    pred = 'pos' if p == 1 else 'neg'
+    print(f'{doc} -> {pred}')
+
+# Print accuracy metrics
+print('\nAccuracy of the classifier is:', metrics.accuracy_score(ytest, predicted))
+print('Confusion matrix:\n', metrics.confusion_matrix(ytest, predicted))
+print('Recall:', metrics.recall_score(ytest, predicted))
+print('Precision:', metrics.precision_score(ytest, predicted))

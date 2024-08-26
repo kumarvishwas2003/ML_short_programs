@@ -1,0 +1,39 @@
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.preprocessing import LabelEncoder
+
+# Load and prepare data
+data = pd.read_csv('dataset4.csv')
+x = data.drop('PlayTennis', axis=1)
+y = data['PlayTennis']
+
+# Encode categorical variables
+label_encoders = {}
+for column in x.columns:
+    le = LabelEncoder()
+    x[column] = le.fit_transform(x[column])
+    label_encoders[column] = le
+
+le_y = LabelEncoder()
+y_encoded = le_y.fit_transform(y)
+
+# Train the decision tree classifier
+clf = DecisionTreeClassifier(criterion='entropy')
+clf.fit(x, y_encoded)
+
+# New samples for prediction
+new_samples = [
+    {'Outlook': 'Rain', 'Temperature': 'Cool', 'Humidity': 'Normal', 'Wind': 'Strong'},
+    {'Outlook': 'Sunny', 'Temperature': 'Mild', 'Humidity': 'Normal', 'Wind': 'Strong'}
+]
+
+# Predict and print results
+for i, sample in enumerate(new_samples, 1):
+    # Convert the sample into a DataFrame with the same column names as x
+    sample_encoded = {col: label_encoders[col].transform([sample[col]])[0] for col in x.columns}
+    sample_df = pd.DataFrame([sample_encoded])
+    
+    prediction = clf.predict(sample_df)
+    prediction_decoded = le_y.inverse_transform(prediction)
+    
+    print(f"Test instance {i}: {list(sample.values())}\nPredicted label: {prediction_decoded[0]}")

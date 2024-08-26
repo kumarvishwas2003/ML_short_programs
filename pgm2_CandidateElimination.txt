@@ -1,0 +1,23 @@
+import numpy as np
+import pandas as pd
+
+data = pd.read_csv('data.csv')
+concepts = data.iloc[:, :-1].values
+target = data.iloc[:, -1].values
+
+def learn(concepts, target):
+    specific_h = concepts[0].copy()
+    general_h = [["?" for _ in specific_h] for _ in specific_h]
+
+    for i, val in enumerate(target):
+        if val == "Yes":
+            specific_h = ["?" if s != c else s for s, c in zip(specific_h, concepts[i])]
+        else:
+            general_h = [[s if s == c else "?" for s, c in zip(specific_h, concepts[i])] for _ in general_h]
+
+    general_h = [g for g in general_h if g != ["?"] * len(specific_h)]
+    return specific_h, general_h
+
+s_final, g_final = learn(concepts, target)
+print("Final Specific_h:\n", s_final)
+print("Final General_h:\n", g_final)

@@ -1,0 +1,46 @@
+import numpy as np
+
+# Data normalization
+X = np.array([[2, 9], [1, 5], [3, 6]], dtype=float)
+y = np.array([[92], [86], [89]], dtype=float)
+X /= np.amax(X, axis=0)
+y /= 100
+
+# Sigmoid functions
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+# Parameters
+epochs = 5000
+learning_rate = 0.1
+input_neurons = X.shape[1]
+hidden_neurons = 3
+output_neurons = 1
+
+# Initialize weights and biases
+wh = np.random.uniform(size=(input_neurons, hidden_neurons))
+bh = np.random.uniform(size=(1, hidden_neurons))
+wout = np.random.uniform(size=(hidden_neurons, output_neurons))
+bout = np.random.uniform(size=(1, output_neurons))
+
+# Training
+for _ in range(epochs):
+    # Forward propagation
+    hidden_input = np.dot(X, wh) + bh
+    hidden_output = sigmoid(hidden_input)
+    output_input = np.dot(hidden_output, wout) + bout
+    output = sigmoid(output_input)
+    
+    # Backpropagation
+    error = y - output
+    output_error = error * sigmoid_derivative(output)
+    hidden_error = output_error.dot(wout.T) * sigmoid_derivative(hidden_output)
+    
+    # Update weights
+    wout += hidden_output.T.dot(output_error) * learning_rate
+    wh += X.T.dot(hidden_error) * learning_rate
+
+print(f"Input:\n{X}\nActual Output:\n{y}\nPredicted Output:\n{output}")

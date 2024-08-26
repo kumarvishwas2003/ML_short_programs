@@ -1,0 +1,26 @@
+#shortest version
+import csv
+
+# Open and read the CSV file
+with open("data.csv", "r") as f:
+    reader = csv.reader(f)
+    headers = next(reader)
+    data = list(reader)
+
+# Initialize hypothesis
+hypothesis = ["0", "0", "0", "0", "0", "0"]
+
+# Process each example in the dataset
+for example in data:
+    print(example)
+    if example[-1] == "TRUE":
+        for index, value in enumerate(example):
+            if value != "TRUE":
+                if hypothesis[index] == "0":
+                    hypothesis[index] = value
+                elif hypothesis[index] != value:
+                    hypothesis[index] = "?"
+
+# Print the final hypothesis
+print("\nThe maximally specific hypothesis for a given training example is:\n")
+print(hypothesis)

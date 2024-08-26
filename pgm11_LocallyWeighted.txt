@@ -1,0 +1,36 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+def kernel(point, xmat, k):
+    diffs = point - xmat
+    weights = np.exp(np.sum(diffs**2, axis=1) / (-2.0 * k**2))
+    return np.diag(weights)
+
+def localWeight(point, xmat, ymat, k):
+    weights = kernel(point, xmat, k)
+    X_w = np.dot(xmat.T, np.dot(weights, xmat))
+    Y_w = np.dot(xmat.T, np.dot(weights, ymat))
+    return np.linalg.solve(X_w, Y_w)
+
+def localWeightRegression(xmat, ymat, k):
+    ypred = np.array([xmat[i] @ localWeight(xmat[i], xmat, ymat, k) for i in range(xmat.shape[0])])
+    return ypred
+
+def graphPlot(X, ypred):
+    sort_index = X[:, 1].argsort()
+    xsort = X[sort_index]
+    plt.scatter(X[:, 1], tip, color='green')
+    plt.plot(xsort[:, 1], ypred[sort_index], color='red', linewidth=5)
+    plt.xlabel('Total bill')
+    plt.ylabel('Tip')
+    plt.show()
+
+# Load data points
+data = pd.read_csv('P10_data10_tips.csv')
+bill = data.total_bill.to_numpy()
+tip = data.tip.to_numpy()
+X = np.column_stack((np.ones(bill.size), bill))
+
+ypred = localWeightRegression(X, tip, 2)  # Increase k to get smooth curves
+graphPlot(X, ypred)
